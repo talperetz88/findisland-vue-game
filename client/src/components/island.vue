@@ -27,7 +27,7 @@
             </div>
             
         </div> -->
-        <canvas id="matrix-canvas" v-if="bitmapinput !== '' && startMap == true" v-on:mouseup="abortThing"></canvas>
+        <canvas id="matrix-canvas" v-if="bitmapinput !== '' && startMap == true" v-on:mouseup="markBit"></canvas>
         <div class="solve-map" v-if="bitmapinput !== '' && startMap == true">
                 <h1 v-if="amountOfIslands > 0 && showRes == true">FOUND {{amountOfIslands}} ISLAND!</h1>
                 <button class="solve-btn" @click="restart()" v-if="amountOfIslands > 0 && showRes == true">RESTART</button>
@@ -51,7 +51,7 @@ export default {
             visitedIndexCount:[],
             colorUsed:[],
             islands:[],
-            rowNbr:[-1, -1, -1, 0, 0, 1, 1, 1],
+            rowNbr:[-1, -1, -1, 0, 0, 1, 1, 1],// These arrays are used to get row and column numbers of 8 neighbors of a given cell
             colNbr:[-1, 0, 1, -1, 1, -1, 0, 1],
             fillMap:true,
             allowDrow:false,
@@ -77,14 +77,10 @@ export default {
         //     ];
         // this.initializeIsland();
     },methods:{
-        abortThing(event) {
-            // let cellSide = 10
+        markBit(event) {
+            /* On click we are drowing the bit we wont on the bitmap */
             var x = Math.floor(event.layerX/10);
             var y = Math.floor(event.layerY/10);
-            // var cellColor = '#000000';
-            // this.matrixCanvas.beginPath();
-            // this.matrixCanvas.fillStyle =  cellColor
-            // this.matrixCanvas.fillRect(x, y, cellSide, cellSide);
             this.islandMatrix[x][y].isIland = (this.islandMatrix[x][y].isIland ? false : true)
             this.islandMatrix[x][y].color = (this.islandMatrix[x][y].isIland ? '#000000' : '#ffffff')
             this.renderCanvas()
@@ -103,8 +99,7 @@ export default {
 
             this.startMap = true
             setTimeout(()=>{this.initializeIsland()},10);
-        },
-        drow:function(){
+        },drow:function(){
             var splitindex = this.bitmapinput.split(',')
             this.rows = splitindex[0]
             this.colums = splitindex[1]
@@ -128,8 +123,10 @@ export default {
                 for (var k = 0; k < this.colums; ++k) {
                     let x = i * cellSide;
                     let y = k * cellSide;
+                    /* turn on the bit if we are not in drowing */
                     let island = (Math.random()>=0.5 && this.fillMap)
                     
+                    /* set the bits in canvas */
                     var cellColor = '#ffffff';
                     if (island) cellColor = '#000000';
                     this.matrixCanvas.beginPath();
@@ -139,15 +136,12 @@ export default {
                     row.push({isIland:island,index:`${i},${k}`,color:'#fffff'})
                     row2.push(false)
                 }
-                this.visitedIndexCount.push(row2)
+                this.visitedIndexCount.push(row2) /* Make a bool array to mark visited cells */
                 matrix.push(row)
             }
 
             this.drowGrid()
             this.islandMatrix = matrix
-            console.log(new Date());
-            // if(!this.allowDrow)
-            //     setTimeout(() => {this.numIslands().then(res => {console.log("number of",res)})},500)
         },
         restart:function(){
             this.rows = 0;
@@ -168,6 +162,7 @@ export default {
             this.showRes = false;
             this.rectWidth =  20;
         },drowGrid:function(){
+            /* this function is drowing the grid */
             var cellSide = 10
             for (let i = 0; i < this.rows*cellSide; i++) {
                 if(i % 10 === 0){
@@ -189,84 +184,31 @@ export default {
                     this.matrixCanvas.stroke();
                 }
             }
-        },
-        markBit:function(bit){
-            if(!this.allowDrow)
-                return;
-            var splitindex = bit.split(',')
-            var i = splitindex[0]
-            var j = splitindex[1]
-            this.islandMatrix[i][j].isIland = (this.islandMatrix[i][j].isIland ? false : true)
-        },
-        renderCanvas:function(){
+        },renderCanvas:function(){
             let cellSide = 10
             for (var i = 0; i < this.rows; ++i) {
                 for (var k = 0; k < this.colums; ++k) {
                     let x = i * cellSide;
                     let y = k * cellSide;
                     
-                    
                     var cellColor = '#ffffff';
                     if(this.islandMatrix[i][k].isIland) cellColor = this.islandMatrix[i][k].color
                     this.matrixCanvas.beginPath();
                     this.matrixCanvas.fillStyle =  cellColor
                     this.matrixCanvas.fillRect(x, y, cellSide, cellSide);
-                    // row.push({isIland:island,index:`${i},${k}`,color:'#fffff'})
-                    // row2.push(false)
                 }
-                // this.visitedIndexCount.push(row2)
-                // matrix.push(row)
             }
             this.drowGrid()
-        },
-        resetMap:function(islands) {
-            // let v = [[0, 1],[1, 0],[0, -1],[-1, 0],[1,1],[-1,-1],[1,-1],[-1,1]]
-            // var arr = islands;
-            // var indexToSkip = [];
-            // for(var m = 0 ; m < islands.length; m++){
-            //     for(var n = 0; n < islands[m].length; n++){
-            //        var temp = v.filter(([h, j]) => h + m >= 0 && h + m < arr.length && j + n >= 0 && j + n < arr.length) .map(([h, j]) => arr[h + m][j + n]).filter(v => v != undefined)
-            //         if(m+1 < islands.length){
-            //             var nextarr = islands[m+1];
-            //             for(var k = 0; k < nextarr.length; k++){
-            //                 if(temp.includes(nextarr[k])){
-            //                     indexToSkip.push(m+1)
-            //                     islands[m] = islands[m].concat(nextarr);
-            //                     if(m+2 < islands.length){
-            //                         m = m+2;
-            //                         break;
-            //                     }
-                                
-            //                 }
-                            
-            //             }
-            //         }
-            //     }
-            // } 
-            // console.log(indexToSkip);
-            for (var i = 0; i < islands.length; ++i) {
-                var color = this.getRandomColor();
-                while (!this.colorUsed.includes(color)) {
-                    color = this.getRandomColor();
-                    this.colorUsed.push(color)
-                }
-                for (var r = 0; r < islands[i].length; ++r) {
-                    var splitIndexes = islands[i][r].split(',')
-                    var a = splitIndexes[0];
-                    var b = splitIndexes[1];
-                    this.islandMatrix[a][b].color = color;
-                }
-                
-            }
-            this.showRes = true;
         },colorIsland:function(islands){
 
             for (let i = 0; i < islands.length; ++i) {
                 var color = this.getRandomColor();
+                /* Diffrent color for each island */
                 while (!this.colorUsed.includes(color)) {
                     color = this.getRandomColor();
                     this.colorUsed.push(color)
                 }
+                /* Changing the color of the island in the original array */
                 for (var r = 0; r < islands[i].length; ++r) {
                     var splitIndexes = islands[i][r].split(',')
                     var a = splitIndexes[0];
@@ -276,26 +218,21 @@ export default {
                 
             }
             this.showRes = true;
-            // for(let i = 0 ; i < this.amountOfIslandsl;i++)
-            //      while (!this.colorUsed.includes(color)) {
-            //         color = this.getRandomColor();
-            //         this.colorUsed.push(color)
-            //     }
             var cellSide = 10
+            /* redrowing the canvas with the correct color for each island */
             for (let i = 0; i < this.rows; ++i) {
                 for (var k = 0; k < this.colums; ++k) {
                     let x = i * cellSide;
                     let y = k * cellSide;
                     var cellColor = '#ffffff';
-                    if(this.islandMatrix[i][k].isIland) cellColor = this.islandMatrix[i][k].color
+                    if(this.islandMatrix[i][k].isIland) cellColor = this.islandMatrix[i][k].color /* Color the island with his color*/
                     this.matrixCanvas.beginPath();
                     this.matrixCanvas.fillStyle =  cellColor
                     this.matrixCanvas.fillRect(x, y, cellSide, cellSide);
                 }
             }
             this.drowGrid()
-        },
-        getRandomColor:function() {
+        },getRandomColor:function() {
             var letters = '0123456789ABCDEF';
             var color = '#';
             for (var i = 0; i < 6; i++) {
@@ -305,111 +242,20 @@ export default {
         },
         solveMap:function(){
             console.log("beforeSolve",new Date());
-            // console.log(this.numIslands().then(res => {console.log("number of",res);console.log("afterSolve",new Date());}));
             console.log(this.countIslands().then(res => {console.log("number of",res),this.colorIsland(this.islands);console.log("afterSolve",new Date());}));
-            // console.log("afterSolve",new Date());
-            // if(this.allowDrow)
-            //    this.numIslands().then(res => {console.log("number of",res),this.resetMap(this.islands);})
-            // else
-            //     this.resetMap(this.islands);
 
-        },
-        bfs: async function(i, j,island){
-            const queue = [[i, j]];
 
-            while (queue.length) {
-                const [i, j] = queue.shift();
-        
-                // this.islandMatrix[i][j].isIland = false;
-                // if(this.visitedIndex.includes(this.islandMatrix[i][j].index))
-                //     continue;
-                this.visitedIndexCount[i][j] = true;
-                if (this.isIsland(i + 1, j)){ 
-                    queue.push([i + 1, j]); 
-                    island.push(`${i+1},${j}`)
-                }
-
-                if (this.isIsland(i, j + 1)){ 
-                    queue.push([i, j + 1]); 
-                    island.push(`${i},${j+1}`)
-                }
-
-                if (this.isIsland(i - 1, j)){ 
-                    queue.push([i - 1, j]); 
-                    island.push(`${i-1},${j}`)
-                }
-
-                if (this.isIsland(i, j - 1) ){ 
-                    queue.push([i, j - 1]); 
-                    island.push(`${i},${j-1}`)
-                }
-                
-                if (this.isIsland(i + 1, j + 1)){ 
-                    queue.push([i + 1, j + 1]); 
-                    island.push(`${i+1},${j+1}`)
-                }
-
-                if (this.isIsland(i - 1, j + 1)){ 
-                    queue.push([i - 1, j + 1]); 
-                    island.push(`${i-1},${j+1}`)
-                }
-
-                if (this.isIsland(i - 1, j - 1)){ 
-                    queue.push([i - 1, j - 1]); 
-                    island.push(`${i-1},${j-1}`)
-                }
-                if (this.isIsland(i + 1, j - 1)){ 
-                    queue.push([i + 1, j - 1]); 
-                    island.push(`${i+1},${j-1}`)
-                }
-
-                // this.visitedIndex.push(`${i},${j}`)
-                // console.log(island);
-            }
-        },
-        isIsland:function(i, j){
-            return i >= 0 && i < this.islandMatrix.length && j >= 0 && j < this.islandMatrix[i].length && this.islandMatrix[i][j].isIland == true && !this.visitedIndexCount[i][j]
-            // if(i >= 0 && i < this.islandMatrix.length && j >= 0 && j < this.islandMatrix[i].length && this.islandMatrix[i][j].isIland == true && !this.visitedIndexCount[i][j]){
-            //     this.visitedIndex.push(`${i},${j}`)
-            //     return true;
-            // }
-            // if(i > 0 && i < this.islandMatrix.length && j >= 0 && j < this.islandMatrix[i].length)
-            //      this.visitedIndex.push(`${i},${j}`)
-            // return false;
-        },
-        numIslands: async function(){
-            let counter = 0;
-            let island = [];
-            for (let i = 0; i < this.islandMatrix.length; i += 1) {
-                for (let j = 0; j < this.islandMatrix[i].length; j += 1) {
-                    if (this.islandMatrix[i][j].isIland == true && !this.visitedIndexCount[i][j]) {
-                        counter += 1;
-                        island.push(`${i},${j}`)
-                        this.bfs(i, j,island).then(() => {
-                            this.islands.push(island)
-                            island = [];
-                        });
-                        
-                    }
-                    // this.visitedIndex.push(`${i},${j}`)
-                    this.visitedIndexCount[i][j] = true;
-                }
-            }
-            this.amountOfIslands = counter;
-            return counter;
         },countIslands: async function(){
             let count = 0;
             let island = [];
             for (let i = 0; i < this.rows; ++i){
                 for (let j = 0; j < this.colums; ++j){
                     if (this.islandMatrix[i][j].isIland == true && !this.visitedIndexCount[i][j]){
-                        // value 1 is not
-                        // visited yet, then new island found, Visit all
-                        // cells in this island and increment island count
                         island.push(`${i},${j}`)
                         await this.DFS(i, j,island)
                         .then(() => {
-                            this.islands.push(island)
+                            /* when we finish in DFS we have all the point of island */
+                            this.islands.push(island) /* Pushing to islands array and starting new island */
                             island = [];
                         });
                         count++;
@@ -420,9 +266,10 @@ export default {
             this.amountOfIslands = count;
             return count;
         },DFS:async function(row, col,island){
+            // Mark this cell as visited
             this.visitedIndexCount[row][col] = true;
              
-            for (let k = 0; k < 8; ++k){
+            for (let k = 0; k < 8; ++k){/* Using the arrays rowNbr colNbr to visit the neighbors */
                 if (this.isSafe( row + this.rowNbr[k], col + this.colNbr[k])){
                     await this.DFS( row +this.rowNbr[k], col + this.colNbr[k],island);
                     island.push(`${row +this.rowNbr[k]},${col + this.colNbr[k]}`)
